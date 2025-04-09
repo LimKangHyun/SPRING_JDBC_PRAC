@@ -3,6 +3,7 @@ package io.kanghyun.springjdbcprac.dao;
 import io.kanghyun.springjdbcprac.member.Member;
 import io.kanghyun.springjdbcprac.util.ConnectionUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.assertj.core.api.Assertions;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
@@ -11,6 +12,7 @@ import org.junit.jupiter.api.Test;
 import java.sql.*;
 
 import static io.kanghyun.springjdbcprac.util.ConnectionUtil.getConnection;
+import static org.assertj.core.api.Assertions.*;
 
 
 @Slf4j
@@ -95,6 +97,53 @@ class StatementTest {
 
         resultRows = stmt.executeUpdate(memberSql);
         log.info("resultRows = {}", resultRows);
+    }
+
+    @Test
+    @DisplayName("로그인 테스트")
+    void select_test() throws Exception {
+
+        // 올바른 member유저의 로그인
+        Member member = genMember("member", "memberpwd");
+        // 비번 틀린 member유저의 로그인
+        Member member_wrong = genMember("member", "wrongpwd");
+
+        String sql_success = genSelectQuery(member);
+        String sql_fail = genSelectQuery(member_wrong);
+
+        stmt = conn.createStatement();
+        // executeQuery()메서드는 resultSet 반환 -> resultSet이 jdbc의 줄별로 읽을 수 있도록
+        rs = stmt.executeQuery(sql_success);
+
+        Member findMember = new Member();
+        // rs.next = 다음 읽어들일 행이 있다면, findMember객체에 rs의 결과를 적용(findMember에 값 넣어주기)
+        if (rs.next()) {
+            findMember.setMemberId(rs.getInt("memberId"));
+            findMember.setUsername(rs.getString("username"));
+            findMember.setPassword(rs.getString("password"));
+        }
+
+        assertThat(findMember.getMemberId()).isEqualTo(3);
+        assertThat(findMember.getUsername()).isEqualTo("member");
+        assertThat(findMember.getPassword()).isEqualTo("memberpwd");
+
+        // 기존 데이터셋 없애기
+        rs.close();
+
+        rs = stmt.executeQuery(sql_fail);
+        findMember = new Member();
+
+        if (rs.next()) {
+            findMember.setMemberId(rs.getInt("memberId"));
+            findMember.setUsername(rs.getString("username"));
+            findMember.setPassword(rs.getString("password"));
+        }
+        assertThat(findMember.getUsername()).isNull();
+        assertThat(findMember.getPassword()).isNull();
+    }
+
+    private static String genSelectQuery(Member member) {
+        return "select m.member_id as memberId, m.username, m.password from member as m where m.username = '%s' AND m.password = '%s'".formatted(member.getUsername(), member.getPassword());
     }
 
     private static String genInsertQuery(Member member) {
