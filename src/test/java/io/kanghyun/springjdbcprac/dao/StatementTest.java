@@ -1,19 +1,56 @@
 package io.kanghyun.springjdbcprac.dao;
 
+import io.kanghyun.springjdbcprac.member.Member;
+import io.kanghyun.springjdbcprac.util.ConnectionUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 import static io.kanghyun.springjdbcprac.util.ConnectionUtil.getConnection;
 
 
 @Slf4j
 class StatementTest {
+
+    Connection conn;
+    Statement stmt;
+    ResultSet rs;
+
+    @BeforeEach
+    void init() {
+        // 접속 (DB 연결객체 생성)
+        conn = getConnection();
+
+    }
+    @AfterEach
+    void close() throws SQLException {
+        // 연결 닫기는 열린 연결 순서의 역순
+        if (rs != null) {
+            try {
+                rs.close();
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (stmt != null) {
+            try {
+                stmt.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (conn != null) {
+            try {
+                conn.close();
+            } catch (SQLException e) {
+                log.error(e.getMessage());
+            }
+        }
+    }
 
     @Test
     @DisplayName("Statement사용해 쿼리를 평문으로 날려 회원가입 테스트")
@@ -39,5 +76,32 @@ class StatementTest {
         } catch (SQLException e) {
             throw new RuntimeException(e);
         }
+    }
+    @Test
+    @DisplayName("동적 쿼리 객체를 생성하여 회원가입 테스트")
+    void insert_intoV2() throws Exception {
+        
+        Member admin = genMember("admin", "adminpwd");
+        Member member = genMember("member", "memberpwd");
+
+        String adminSql = genInsertQuery(admin);
+
+        String memberSql = genInsertQuery(member);
+
+        stmt = conn.createStatement();
+
+        int resultRows = stmt.executeUpdate(adminSql);
+        log.info("resultRows = {}", resultRows);
+
+        resultRows = stmt.executeUpdate(memberSql);
+        log.info("resultRows = {}", resultRows);
+    }
+
+    private static String genInsertQuery(Member member) {
+        return "insert into member (username, password) values ('%s', '%s')".formatted(member.getUsername(), member.getPassword());
+    }
+
+    private static Member genMember(String username, String password) {
+        return new Member(0, username, password);
     }
 }
