@@ -79,7 +79,7 @@ class StatementTest {
     }
     @Test
     @DisplayName("동적 쿼리 객체를 생성하여 회원가입 테스트")
-    void insert_intoV2() throws Exception {
+    void insert_testV2() throws Exception {
         
         Member admin = genMember("admin", "adminpwd");
         Member member = genMember("member", "memberpwd");
