@@ -19,6 +19,7 @@ import static org.assertj.core.api.Assertions.*;
 class StatementTest {
 
     Connection conn;
+    PreparedStatement pstmt;
     Statement stmt;
     ResultSet rs;
 
@@ -41,6 +42,13 @@ class StatementTest {
         if (stmt != null) {
             try {
                 stmt.close();
+            } catch (SQLException e) {
+                throw new RuntimeException(e);
+            }
+        }
+        if (pstmt != null) {
+            try {
+                pstmt.close();
             } catch (SQLException e) {
                 throw new RuntimeException(e);
             }
@@ -169,6 +177,34 @@ class StatementTest {
 
         assertThat(findMember.getUsername()).isEqualTo("admin");
         assertThat(findMember.getPassword()).isEqualTo("adminpwd");
+    }
+
+    @Test
+    @DisplayName("PreparedStatement 사용")
+    void pstmt_test() throws Exception {
+
+        // 문자열을 그대로 보내는 것이 아닌 username과 password를 전처리진행 후, 문자열 보냄 (SQL Injection 방어)
+        Member unsafeAttempt = genMember("admin", "' or '' = '");
+        // '%s'를 받아서 문자열을 그대로 입력하는 대신, 마치 sql form을 만들듯이 변경
+        String sql = "SELECT m.member_id, m.username, m.password FROM member as m WHERE m.username = ? AND m.password =?";
+        // username과 password에 대한 컴파일을 먼저 실행
+        pstmt = conn.prepareStatement(sql);
+
+        pstmt.setString(1, unsafeAttempt.getUsername());
+        pstmt.setString(2, unsafeAttempt.getPassword());
+
+        rs = pstmt.executeQuery();
+
+        Member findMember = new Member();
+
+        if (rs.next()) {
+            findMember.setMemberId(rs.getInt("memberId"));
+            findMember.setUsername(rs.getString("username"));
+            findMember.setPassword(rs.getString("password"));
+        }
+
+        assertThat(findMember.getUsername()).isNull();
+        assertThat(findMember.getPassword()).isNull();
     }
 
     private static String genSelectQuery(Member member) {
