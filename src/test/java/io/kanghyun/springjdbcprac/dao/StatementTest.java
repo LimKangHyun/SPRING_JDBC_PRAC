@@ -142,6 +142,35 @@ class StatementTest {
         assertThat(findMember.getPassword()).isNull();
     }
 
+    @Test
+    @DisplayName("SQLInjection 공격 테스트")
+    void test_sql_injection_attack() throws Exception {
+
+        // 로그인 정보를 틀리게 해서 강제 로그인 SQL Injection -> SQL문 문자열을 그대로 보내서 공격받을 수 있다.
+        // where절을 참으로 만드는 공격
+        // SELECT m.member_id, m.username, m.password FROM member as m WHERE m.username = 'admin' AND m.password = '' or '' = ''
+        // '' or '' = '' 에서 where절이 참이 되어 로그인이 가능해진다.
+        Member firstRowAttack = genMember("member", "' or '' = '");
+        // where절을 username이 admin인 행을 반환하도록 하는 공격
+        // SELECT m.member_id, m.username, m.password FROM member as m WHERE m.username = 'admin' AND m.password = '' OR username = 'admin'
+        Member adminAttack = genMember("member", "' OR username = 'admin");
+        String sql = genSelectQuery(adminAttack);
+
+        stmt = conn.createStatement();
+        rs = stmt.executeQuery(sql);
+
+        Member findMember = new Member();
+
+        if (rs.next()) {
+            findMember.setMemberId(rs.getInt("memberId"));
+            findMember.setUsername(rs.getString("username"));
+            findMember.setPassword(rs.getString("password"));
+        }
+
+        assertThat(findMember.getUsername()).isEqualTo("admin");
+        assertThat(findMember.getPassword()).isEqualTo("adminpwd");
+    }
+
     private static String genSelectQuery(Member member) {
         return "select m.member_id as memberId, m.username, m.password from member as m where m.username = '%s' AND m.password = '%s'".formatted(member.getUsername(), member.getPassword());
     }
