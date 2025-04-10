@@ -11,6 +11,7 @@ import org.junit.jupiter.api.Test;
 
 import java.util.NoSuchElementException;
 import java.util.Optional;
+import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.*;
 
@@ -91,4 +92,34 @@ class SimpleJdbcCrudRepositoryTest {
         ).isInstanceOf(NoSuchElementException.class);
     }
 
+    @Test
+    @DisplayName("update test")
+    void update_test() throws Exception {
+    
+        int availableIdx = 1;
+
+        Optional<Member> memberOptional = repository.findById(availableIdx);
+        boolean result = memberOptional.isPresent();
+        assertThat(result).isTrue();
+
+        Member findMember = memberOptional.get();
+
+        String targetPwd = UUID.randomUUID().toString();
+
+        findMember.setPassword(targetPwd);
+        // 변경한 비번 업데이트
+        repository.update(findMember);
+
+        // 검증 내용 : 업데이트한 멤버객체가 정상적으로 수행되었는지 확인
+        Optional<Member> findMemberOptional = repository.findById(availableIdx);
+        boolean result2 = findMemberOptional.isPresent();
+        assertThat(result2).isTrue();
+
+        // 검증 내용 : 변경한 비번이 멤버객체에 잘 들어갔는지 확인 + 업데이트 전 멤버 객체와 각 요소 비교(findMember)
+        Member updatedMember = findMemberOptional.get();
+        assertThat(updatedMember.getPassword()).isEqualTo(findMember.getPassword());
+        assertThat(updatedMember.getMemberId()).isEqualTo(findMember.getMemberId());
+        assertThat(updatedMember.getUsername()).isEqualTo(findMember.getUsername());
+        log.info("update member : {}", updatedMember);
+    }
 }
