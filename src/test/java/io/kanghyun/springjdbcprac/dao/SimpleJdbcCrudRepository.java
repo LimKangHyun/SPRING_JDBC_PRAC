@@ -6,10 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.support.JdbcUtils;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
+import java.sql.*;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -27,9 +24,35 @@ public class SimpleJdbcCrudRepository implements SimpleCrudRepository {
         JdbcUtils.closeStatement(statement);
         JdbcUtils.closeConnection(connection);
     }
-    @Override
-    public void save(Member member) {
 
+    // jdbc로 회원가입
+    @Override
+    public Member save(Member member) throws SQLException{
+        String sql = "insert into member (username, password) values (?, ?)";
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
+            pstmt.setString(1, member.getUsername());
+            pstmt.setString(2, member.getPassword());
+
+            pstmt.executeUpdate();
+            rs = pstmt.getGeneratedKeys();
+
+            if (rs.next()) {
+                // rs의 첫번째 칼럼의 pk 즉 id값
+                int idx = rs.getInt(1);
+            }
+            return member;
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            closeConnection(conn, pstmt, rs);
+        }
     }
 
     @Override
