@@ -10,6 +10,6 @@ public interface SimpleCrudRepository {
     Member save(Member member) throws SQLException;
     Optional<Member> findById(Integer id) throws SQLException;
     void update(Member member) throws SQLException;
-    void delete();
+    void remove(Integer id) throws SQLException;
 
 }
