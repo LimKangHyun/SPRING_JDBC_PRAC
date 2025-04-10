@@ -9,6 +9,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.NoSuchElementException;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.*;
@@ -70,6 +71,24 @@ class SimpleJdbcCrudRepositoryTest {
 
         log.info("find member : {}", findMember);
 
+    }
+
+    @Test
+    @DisplayName("read test")
+    void read_test_fail() throws Exception {
+
+        int inAvailableIdx = 9999;
+
+        Optional<Member> memberOptional = repository.findById(inAvailableIdx);
+        boolean result = memberOptional.isPresent();
+        assertThat(result).isFalse();
+
+        // 검증내용 : memberOptional.get()을 했을 때, NoSuchElementException이 터졌는지 확인
+        assertThatThrownBy(
+                () -> {
+                    memberOptional.get();
+                }
+        ).isInstanceOf(NoSuchElementException.class);
     }
 
 }
