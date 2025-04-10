@@ -122,4 +122,23 @@ class SimpleJdbcCrudRepositoryTest {
         assertThat(updatedMember.getUsername()).isEqualTo(findMember.getUsername());
         log.info("update member : {}", updatedMember);
     }
+    @Test
+    @DisplayName("remove test")
+    void remove_test() throws Exception {
+
+        int targetId = 3;
+        repository.remove(targetId);
+
+        Optional<Member> memberOptional = repository.findById(targetId);
+        boolean result = memberOptional.isPresent();
+        assertThat(result).isFalse();
+
+        // 검증내용 : memberOptional.get()을 했을 때, NoSuchElementException이 터졌는지 확인
+        assertThatThrownBy(
+                () -> {
+                    memberOptional.get();
+                }
+        ).isInstanceOf(NoSuchElementException.class);
+
+    }
 }
