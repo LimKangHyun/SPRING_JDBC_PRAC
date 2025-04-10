@@ -9,6 +9,10 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import java.util.Optional;
+
+import static org.assertj.core.api.Assertions.*;
+
 @Slf4j
 class SimpleJdbcCrudRepositoryTest {
 
@@ -45,7 +49,26 @@ class SimpleJdbcCrudRepositoryTest {
         Member savedMember = repository.save(saveReq);
 
         log.info("saved member : {}", savedMember);
-        Assertions.assertThat(savedMember.getMemberId()).isEqualTo(0);
+        assertThat(savedMember.getMemberId()).isEqualTo(0);
+
+    }
+
+    @Test
+    @DisplayName("read test")
+    void read_test_success() throws Exception {
+
+        int availableIdx = 1;
+
+        Optional<Member> memberOptional = repository.findById(availableIdx);
+        boolean result = memberOptional.isPresent();
+        assertThat(result).isTrue();
+
+        Member findMember = memberOptional.get();
+
+        assertThat(findMember).isNotNull();
+        assertThat(findMember.getMemberId()).isEqualTo(availableIdx);
+
+        log.info("find member : {}", findMember);
 
     }
 
