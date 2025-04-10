@@ -7,6 +7,7 @@ import org.springframework.jdbc.support.JdbcUtils;
 
 import javax.sql.DataSource;
 import java.sql.*;
+import java.util.Optional;
 
 @Slf4j
 @RequiredArgsConstructor
@@ -55,9 +56,40 @@ public class SimpleJdbcCrudRepository implements SimpleCrudRepository {
         }
     }
 
+    // 조회값이 null일수도 있으므로 Optional 처리
     @Override
-    public void findById() {
+    public Optional<Member> findById(Integer id) throws SQLException {
+        String sql = "select * from member where member_id = ?";
 
+        // getConnection이 실패할경우 프로그램이 터지므로, null로 초기화하여 자원을 안전하게 관리
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+            // ?의 첫번째 자리에 매개변수 넣어주기
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+
+            if (rs.next()) {
+                // rs 데이터셋에서 읽어온 값을 findMember에 넣어주고 Optional로 안전하게 반환
+                // SQL 의존성 끊어지는 구간
+                Member findMember = new Member(
+                        rs.getInt("member_id"),
+                        rs.getString("username"),
+                        rs.getString("password")
+                );
+                return Optional.of(findMember);
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            closeConnection(conn, pstmt, rs);
+        }
     }
 
     @Override
