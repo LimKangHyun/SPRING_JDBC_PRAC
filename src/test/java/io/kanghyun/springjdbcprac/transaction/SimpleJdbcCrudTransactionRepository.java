@@ -89,7 +89,23 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
 
     @Override
     public void update(Member member) throws SQLException {
+        String sql = "update member set password = ? where member_id = ?";
 
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+
+            pstmt.setString(1, member.getPassword());
+            pstmt.setInt(2, member.getMemberId());
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+
+        } finally {
+            closeConnection(conn, pstmt, null);
+        }
     }
 
     @Override
