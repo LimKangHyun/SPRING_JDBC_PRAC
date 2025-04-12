@@ -58,7 +58,33 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
     }
     @Override
     public Optional<Member> findById(Integer id) throws SQLException {
-        return Optional.empty();
+
+        String sql = "select * from where member_id = ? ";
+
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+        ResultSet rs = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+            rs = pstmt.executeQuery();
+            if (rs.next()) {
+                Member findMember = new Member(
+                        rs.getInt("member_id"),
+                        rs.getString("username"),
+                        rs.getString("password")
+                );
+                return Optional.of(findMember);
+            } else {
+                return Optional.empty();
+            }
+        } catch (SQLException e) {
+            throw e;
+        } finally {
+            closeConnection(conn, pstmt, rs);
+        }
     }
 
     @Override
