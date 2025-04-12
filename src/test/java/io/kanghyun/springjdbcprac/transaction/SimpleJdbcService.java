@@ -38,6 +38,7 @@ public class SimpleJdbcService {
             transactionManager.commit(transaction);
         } catch (SQLException e) {
             transactionManager.rollback(transaction);
+            throw new RuntimeException(e);
         }
     }
 }

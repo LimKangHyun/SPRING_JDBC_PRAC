@@ -59,7 +59,7 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
     @Override
     public Optional<Member> findById(Integer id) throws SQLException {
 
-        String sql = "select * from where member_id = ? ";
+        String sql = "select * from member where member_id = ? ";
 
         Connection conn = null;
         PreparedStatement pstmt = null;
@@ -81,7 +81,7 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
                 return Optional.empty();
             }
         } catch (SQLException e) {
-            throw e;
+            throw new SQLException("No member found with id = " + id);
         } finally {
             closeConnection(conn, pstmt, rs);
         }
