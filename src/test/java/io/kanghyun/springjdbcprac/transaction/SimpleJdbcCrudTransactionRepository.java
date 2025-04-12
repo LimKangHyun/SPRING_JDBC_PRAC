@@ -110,6 +110,21 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
 
     @Override
     public void remove(Integer id) throws SQLException {
+        String sql = "delete from member where member_id = ?";
 
+        Connection conn = null;
+        PreparedStatement pstmt = null;
+
+        try {
+            conn = getConnection();
+            pstmt = conn.prepareStatement(sql);
+            pstmt.setInt(1, id);
+
+            pstmt.executeUpdate();
+        } catch (SQLException e) {
+
+        } finally {
+            closeConnection(conn, pstmt, null);
+        }
     }
 }
