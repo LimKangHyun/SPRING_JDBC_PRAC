@@ -18,27 +18,8 @@ public class SimpleJdbcService {
     private final SimpleCrudRepository repository;
     private final PlatformTransactionManager transactionManager;
 
-    // 트랜잭션을 마무리할 때, 커밋하는 메서드 -> 데이터베이스에 반영 X
-    public void logic1() {
-
-        // 트랜잭션 시작점
-        TransactionStatus transaction = transactionManager.getTransaction(
-                new DefaultTransactionDefinition()
-        );
-        try {
-            Member saveReq = new Member();
-            Member saved = repository.save(saveReq);
-            saved.setPassword("123456");
-
-            repository.update(saved);
-            transactionManager.commit(transaction);
-        } catch (SQLException e) {
-            transactionManager.rollback(transaction);
-        }
-    }
-
-    // 트랜잭션을 마무리할때, 롤백하는 메서드 -> 데이터베이스에 반영 X
-    public void logic2(Member saveReq, boolean isRollback) {
+    // 트랜잭션을 마무리할때, 오류가 나면 롤백, 성공하면 커밋하는 메서드 -> 데이터베이스에 반영 X
+    public void logic(Member saveReq, boolean isRollback) {
 
         TransactionStatus transaction = transactionManager.getTransaction(
                 new DefaultTransactionDefinition()
@@ -54,7 +35,7 @@ public class SimpleJdbcService {
                 transactionManager.rollback(transaction);
                 return;
             }
-            transactionManager.rollback(transaction);
+            transactionManager.commit(transaction);
         } catch (SQLException e) {
             transactionManager.rollback(transaction);
         }
