@@ -38,7 +38,7 @@ public class SimpleJdbcCrudTransactionRepository implements SimpleCrudRepository
 
         try {
             conn = getConnection();
-            pstmt = conn.prepareStatement(sql);
+            pstmt = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
 
             pstmt.setString(1, member.getUsername());
             pstmt.setString(2, member.getPassword());
